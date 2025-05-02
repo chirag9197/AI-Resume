@@ -1,0 +1,60 @@
+@media print {
+  /* Hide everything except the resume */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the resume content */
+  .resume-container,
+  .resume-container * {
+    visibility: visible;
+  }
+
+  /* Position the resume at the top of the page */
+  .resume-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Hide UI elements */
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page settings */
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  /* Ensure proper rendering */
+  html,
+  body {
+    width: 8.5in;
+    height: 11in;
+    font-size: 12pt;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  /* Ensure links are visible */
+  a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+
+  /* Ensure proper spacing */
+  .mb-4 {
+    margin-bottom: 0.5in !important;
+  }
+
+  /* Ensure proper font rendering */
+  * {
+    font-family: "Arial", sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

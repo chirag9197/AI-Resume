@@ -1,0 +1,42 @@
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .resume-container {
+    width: 100%;
+    height: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure proper rendering of icons in PDF */
+  svg {
+    display: inline-block !important;
+  }
+
+  /* Ensure links are visible but not underlined in PDF */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /* Ensure proper spacing in PDF */
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .mb-6 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  /* Ensure proper font rendering */
+  * {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
+}
