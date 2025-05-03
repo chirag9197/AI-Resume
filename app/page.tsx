@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { ResumeForm } from "@/components/resume-form"
 import { ResumePreview } from "@/components/resume-preview"
-import { SampleDataButton } from "@/components/sample-data-button"
 import type { ResumeData, GeneratedResume } from "@/types/resume"
 import { generateResume } from "./actions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -114,22 +113,12 @@ export default function Home() {
     setShowPreview(false)
   }
 
-  const handleLoadSampleData = (data: ResumeData) => {
-    setFormData(data)
-  }
-
   return (
     <main className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">AI-Powered Resume Builder</h1>
           <p className="text-gray-600 mb-4">Create a tailored, ATS-friendly resume optimized for your target job</p>
-
-          {!showPreview && (
-            <div className="flex justify-center mb-4">
-              <SampleDataButton onLoad={handleLoadSampleData} />
-            </div>
-          )}
         </div>
 
         {error && (
