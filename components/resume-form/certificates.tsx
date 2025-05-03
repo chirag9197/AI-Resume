@@ -79,7 +79,6 @@ export function CertificatesForm({ value, onChange }: CertificatesFormProps) {
                 value={certificate.name}
                 onChange={(e) => updateCertificate(index, "name", e.target.value)}
                 placeholder="AWS Certified Solutions Architect"
-                required
               />
             </div>
 
@@ -90,7 +89,6 @@ export function CertificatesForm({ value, onChange }: CertificatesFormProps) {
                 value={certificate.issuer}
                 onChange={(e) => updateCertificate(index, "issuer", e.target.value)}
                 placeholder="Amazon Web Services"
-                required
               />
             </div>
 
@@ -101,7 +99,6 @@ export function CertificatesForm({ value, onChange }: CertificatesFormProps) {
                 type="month"
                 value={certificate.date}
                 onChange={(e) => updateCertificate(index, "date", e.target.value)}
-                required
               />
             </div>
 
