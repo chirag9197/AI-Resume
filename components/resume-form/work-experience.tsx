@@ -20,7 +20,6 @@ export function WorkExperienceForm({ value, onChange }: WorkExperienceFormProps)
       position: "",
       startDate: "",
       endDate: "",
-      current: false,
       description: "",
     }
     onChange([...value, newExperience])
@@ -108,37 +107,13 @@ export function WorkExperienceForm({ value, onChange }: WorkExperienceFormProps)
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`endDate-${index}`}>End Date</Label>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`current-${index}`}
-                    checked={experience.current}
-                    onCheckedChange={(checked) => {
-                      // Convert the checked value to a boolean
-                      const isChecked = checked === true
-
-                      // Update the current status
-                      updateExperience(index, "current", isChecked)
-
-                      // If checked, clear the end date
-                      if (isChecked) {
-                        updateExperience(index, "endDate", "")
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`current-${index}`} className="text-sm cursor-pointer">
-                    Current
-                  </Label>
-                </div>
-              </div>
+              <Label htmlFor={`endDate-${index}`}>End Date</Label>
               <Input
                 id={`endDate-${index}`}
                 type="month"
                 value={experience.endDate}
                 onChange={(e) => updateExperience(index, "endDate", e.target.value)}
-                disabled={experience.current}
-                required={!experience.current}
+                required
               />
             </div>
           </div>

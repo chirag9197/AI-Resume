@@ -24,7 +24,6 @@ export function EducationForm({ value, onChange }: EducationFormProps) {
       field: "",
       startDate: "",
       endDate: "",
-      current: false,
       description: "",
     }
     onChange([...value, newEducation])
@@ -138,37 +137,13 @@ export function EducationForm({ value, onChange }: EducationFormProps) {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`endDate-${index}`}>End Date</Label>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`current-${index}`}
-                    checked={education.current}
-                    onCheckedChange={(checked) => {
-                      // Convert the checked value to a boolean
-                      const isChecked = checked === true
-
-                      // Update the current status
-                      updateEducation(index, "current", isChecked)
-
-                      // If checked, clear the end date
-                      if (isChecked) {
-                        updateEducation(index, "endDate", "")
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`current-${index}`} className="text-sm cursor-pointer">
-                    Current
-                  </Label>
-                </div>
-              </div>
+              <Label htmlFor={`endDate-${index}`}>End Date</Label>
               <Input
                 id={`endDate-${index}`}
                 type="month"
                 value={education.endDate}
                 onChange={(e) => updateEducation(index, "endDate", e.target.value)}
-                disabled={education.current}
-                required={!education.current}
+                required
               />
             </div>
           </div>
