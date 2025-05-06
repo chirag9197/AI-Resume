@@ -1,4 +1,3 @@
-import html2pdf from "html2pdf.js"
 import type { TemplateType } from "@/types/resume"
 import { templateStyles } from "@/components/resume-form/template-styles"
 
@@ -8,8 +7,13 @@ interface PdfExportOptions {
 }
 
 export async function exportToPdf(element: HTMLElement, options: PdfExportOptions) {
+  if (typeof window === 'undefined') return
+
   const { filename, template = "modern" } = options
   const styles = templateStyles[template]
+
+  // Dynamically import html2pdf only on client side
+  const html2pdf = (await import('html2pdf.js')).default
 
   // Clone the element to avoid modifying the original
   const elementToExport = element.cloneNode(true) as HTMLElement

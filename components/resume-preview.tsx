@@ -5,7 +5,6 @@ import type { GeneratedResume, TemplateType } from "@/types/resume"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Linkedin, Globe, Award, BadgeIcon as Certificate } from "lucide-react"
-import { ExportOptions } from "@/components/export-options"
 import { ExportDiagnostics } from "@/components/export-diagnostics"
 import { PdfExportButton } from "@/components/pdf-export-button"
 import { templateStyles } from "./resume-form/template-styles"
@@ -43,7 +42,6 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
             resumeRef={resumeRef}
             resume={resume}
           />
-          <ExportOptions resume={resume} resumeRef={resumeRef} />
         </div>
       </div>
 
