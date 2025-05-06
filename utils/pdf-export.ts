@@ -1,85 +1,40 @@
 import html2pdf from "html2pdf.js"
+import type { TemplateType } from "@/types/resume"
+import { templateStyles } from "@/components/resume-form/template-styles"
 
 interface PdfExportOptions {
-  filename?: string
-  margin?: number | number[]
-  pageSize?: string
-  onProgress?: (progress: number) => void
-  onComplete?: () => void
-  onError?: (error: any) => void
+  filename: string
+  template?: TemplateType
 }
 
-export async function exportToPdf(element: HTMLElement, options: PdfExportOptions = {}): Promise<void> {
-  const {
-    filename = "resume.pdf",
-    margin = [0.5, 0.5, 0.5, 0.5],
-    pageSize = "letter",
-    onProgress,
-    onComplete,
-    onError,
-  } = options
+export async function exportToPdf(element: HTMLElement, options: PdfExportOptions) {
+  const { filename, template = "modern" } = options
+  const styles = templateStyles[template]
 
-  try {
-    // Check if html2pdf is properly loaded
-    if (typeof html2pdf !== "function") {
-      console.error("html2pdf is not properly loaded:", html2pdf)
-      throw new Error("PDF export library not available")
-    }
+  // Clone the element to avoid modifying the original
+  const elementToExport = element.cloneNode(true) as HTMLElement
 
-    // Configure PDF options for optimal quality and formatting
-    const pdfOptions = {
-      margin: margin,
-      filename: filename,
-      image: { type: "jpeg", quality: 1.0 },
-      html2canvas: {
-        scale: 2, // Higher scale for better quality
-        useCORS: true, // Enable CORS for external resources
-        logging: false,
-        letterRendering: true,
-      },
-      jsPDF: {
-        unit: "in",
-        format: pageSize,
-        orientation: "portrait",
-      },
-    }
+  // Apply template styles
+  elementToExport.className = styles.container
+  elementToExport.querySelectorAll("h1").forEach((el) => el.className = styles.name)
+  elementToExport.querySelectorAll("h2").forEach((el) => el.className = styles.sectionTitle)
+  elementToExport.querySelectorAll("h3").forEach((el) => el.className = styles.itemTitle)
+  elementToExport.querySelectorAll(".section").forEach((el) => el.className = styles.section)
+  elementToExport.querySelectorAll(".list").forEach((el) => el.className = styles.list)
+  elementToExport.querySelectorAll(".item").forEach((el) => el.className = styles.item)
+  elementToExport.querySelectorAll(".subtitle").forEach((el) => el.className = styles.itemSubtitle)
+  elementToExport.querySelectorAll(".date").forEach((el) => el.className = styles.itemDate)
+  elementToExport.querySelectorAll(".description").forEach((el) => el.className = styles.itemDescription)
 
-    // Create a worker to handle the PDF generation
-    const worker = html2pdf()
-
-    // Set up progress simulation
-    if (onProgress) {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += 10
-        if (progress >= 90) {
-          clearInterval(interval)
-        }
-        onProgress(progress)
-      }, 200)
-    }
-
-    // Generate and save the PDF using a simpler approach
-    await worker
-      .from(element)
-      .set(pdfOptions)
-      .save()
-      .then(() => {
-        if (onComplete) {
-          onComplete()
-        }
-      })
-      .catch((error: any) => {
-        console.error("PDF generation error:", error)
-        if (onError) {
-          onError(error)
-        }
-      })
-  } catch (error) {
-    console.error("PDF export failed:", error)
-    if (onError) {
-      onError(error)
-    }
-    throw error
+  // Configure PDF options
+  const opt = {
+    margin: 0.5,
+    filename: `${filename}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
   }
+
+  // Export to PDF
+  await html2pdf().set(opt).from(elementToExport).save()
 }

@@ -1,13 +1,15 @@
 "use client"
 
 import { useRef } from "react"
-import type { GeneratedResume } from "@/types/resume"
+import type { GeneratedResume, TemplateType } from "@/types/resume"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Linkedin, Globe, Award, BadgeIcon as Certificate } from "lucide-react"
 import { ExportOptions } from "@/components/export-options"
 import { ExportDiagnostics } from "@/components/export-diagnostics"
 import { PdfExportButton } from "@/components/pdf-export-button"
+import { templateStyles } from "./resume-form/template-styles"
+import { cn } from "@/lib/utils"
 
 interface ResumePreviewProps {
   resume: GeneratedResume
@@ -16,6 +18,8 @@ interface ResumePreviewProps {
 
 export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
   const resumeRef = useRef<HTMLDivElement>(null)
+  const template = resume.template || "modern"
+  const styles = templateStyles[template]
 
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
@@ -37,7 +41,7 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
         <div className="flex gap-2">
           <PdfExportButton
             resumeRef={resumeRef}
-            filename={`${resume.personalInfo.fullName.replace(/\s+/g, "_")}_Resume`}
+            resume={resume}
           />
           <ExportOptions resume={resume} resumeRef={resumeRef} />
         </div>
@@ -46,12 +50,12 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
       <Card className="p-8 bg-white shadow-md">
         <div
           ref={resumeRef}
-          className="resume-container w-full max-w-[8.5in] mx-auto bg-white text-black print:shadow-none"
+          className={cn("resume-container w-full max-w-[8.5in] mx-auto bg-white text-black print:shadow-none", styles.container)}
           style={{ minHeight: "11in" }}
         >
           {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">{resume.personalInfo.fullName}</h1>
+          <div className={cn(styles.header)}>
+            <h1 className={styles.name}>{resume.personalInfo.fullName}</h1>
             <div className="flex flex-wrap justify-center gap-3 mt-2 text-sm">
               {resume.personalInfo.email && (
                 <div className="flex items-center">
@@ -114,29 +118,29 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Summary */}
           {resume.summary && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Professional Summary</h2>
-              <p className="text-sm">{resume.summary}</p>
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Professional Summary</h2>
+              <p className={styles.itemDescription}>{resume.summary}</p>
             </div>
           )}
 
           {/* Work Experience */}
           {resume.workExperience && resume.workExperience.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Work Experience</h2>
-              <div className="space-y-3">
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Work Experience</h2>
+              <div className={styles.list}>
                 {resume.workExperience.map((exp) => (
-                  <div key={exp.id}>
+                  <div key={exp.id} className={styles.item}>
                     <div className="flex justify-between items-baseline">
-                      <h3 className="font-bold text-sm">{exp.position}</h3>
-                      <span className="text-xs">
+                      <h3 className={styles.itemTitle}>{exp.position}</h3>
+                      <span className={styles.itemDate}>
                         {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
                       </span>
                     </div>
-                    <div className="text-sm font-medium">{exp.company}</div>
+                    <div className={styles.itemSubtitle}>{exp.company}</div>
                     <ul className="list-none mt-1">
                       {exp.description.split("\n").map((bullet, i) => (
-                        <li key={i} className="text-xs ml-0 pl-0">
+                        <li key={i} className={styles.itemDescription}>
                           {bullet}
                         </li>
                       ))}
@@ -149,21 +153,21 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Education */}
           {resume.education && resume.education.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Education</h2>
-              <div className="space-y-3">
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Education</h2>
+              <div className={styles.list}>
                 {resume.education.map((edu) => (
-                  <div key={edu.id}>
+                  <div key={edu.id} className={styles.item}>
                     <div className="flex justify-between items-baseline">
-                      <h3 className="font-bold text-sm">
+                      <h3 className={styles.itemTitle}>
                         {edu.degree} in {edu.field}
                       </h3>
-                      <span className="text-xs">
+                      <span className={styles.itemDate}>
                         {formatDate(edu.startDate)} - {edu.current ? "Present" : formatDate(edu.endDate)}
                       </span>
                     </div>
-                    <div className="text-sm font-medium">{edu.institution}</div>
-                    {edu.description && <p className="text-xs mt-1 italic">{edu.description}</p>}
+                    <div className={styles.itemSubtitle}>{edu.institution}</div>
+                    {edu.description && <p className={styles.itemDescription}>{edu.description}</p>}
                   </div>
                 ))}
               </div>
@@ -172,35 +176,37 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Certificates */}
           {resume.certificates && resume.certificates.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Certificates</h2>
-              <div className="space-y-2">
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Certificates</h2>
+              <div className={styles.list}>
                 {resume.certificates.map((cert) => (
-                  <div key={cert.id} className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center">
-                        <Certificate className="h-3 w-3 mr-1" />
-                        <h3 className="font-medium text-sm">
-                          {cert.url ? (
-                            <a
-                              href={cert.url.startsWith("http") ? cert.url : `https://${cert.url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:underline"
-                            >
-                              {cert.name}
-                            </a>
-                          ) : (
-                            cert.name
-                          )}
-                        </h3>
+                  <div key={cert.id} className={styles.item}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center">
+                          <Certificate className="h-3 w-3 mr-1" />
+                          <h3 className={styles.itemTitle}>
+                            {cert.url ? (
+                              <a
+                                href={cert.url.startsWith("http") ? cert.url : `https://${cert.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {cert.name}
+                              </a>
+                            ) : (
+                              cert.name
+                            )}
+                          </h3>
+                        </div>
+                        <p className={styles.itemDescription}>
+                          {cert.issuer}
+                          {cert.description && <span className="italic"> - {cert.description}</span>}
+                        </p>
                       </div>
-                      <p className="text-xs">
-                        {cert.issuer}
-                        {cert.description && <span className="italic"> - {cert.description}</span>}
-                      </p>
+                      <span className={styles.itemDate}>{formatDate(cert.date)}</span>
                     </div>
-                    <span className="text-xs">{formatDate(cert.date)}</span>
                   </div>
                 ))}
               </div>
@@ -209,19 +215,21 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Achievements */}
           {resume.achievements && resume.achievements.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Achievements</h2>
-              <div className="space-y-2">
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Achievements</h2>
+              <div className={styles.list}>
                 {resume.achievements.map((achievement) => (
-                  <div key={achievement.id} className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center">
-                        <Award className="h-3 w-3 mr-1" />
-                        <h3 className="font-medium text-sm">{achievement.title}</h3>
+                  <div key={achievement.id} className={styles.item}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center">
+                          <Award className="h-3 w-3 mr-1" />
+                          <h3 className={styles.itemTitle}>{achievement.title}</h3>
+                        </div>
+                        <p className={styles.itemDescription}>{achievement.description}</p>
                       </div>
-                      <p className="text-xs">{achievement.description}</p>
+                      {achievement.date && <span className={styles.itemDate}>{formatDate(achievement.date)}</span>}
                     </div>
-                    {achievement.date && <span className="text-xs">{formatDate(achievement.date)}</span>}
                   </div>
                 ))}
               </div>
@@ -230,11 +238,11 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Skills */}
           {resume.skills && resume.skills.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-lg font-bold border-b pb-1 mb-2">Skills</h2>
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Skills</h2>
               <div className="flex flex-wrap gap-2">
                 {resume.skills.map((skill, index) => (
-                  <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  <span key={index} className={cn("text-xs px-2 py-1 rounded", styles.item)}>
                     {skill}
                   </span>
                 ))}
@@ -244,14 +252,17 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
 
           {/* Additional Sections */}
           {resume.additionalSections && Object.keys(resume.additionalSections).length > 0 && (
-            <>
-              {Object.entries(resume.additionalSections).map(([title, content]) => (
-                <div key={title} className="mb-4">
-                  <h2 className="text-lg font-bold border-b pb-1 mb-2">{title}</h2>
-                  <p className="text-sm whitespace-pre-line">{content}</p>
-                </div>
-              ))}
-            </>
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Additional Sections</h2>
+              <div className={styles.list}>
+                {Object.entries(resume.additionalSections).map(([title, content]) => (
+                  <div key={title} className={styles.item}>
+                    <h3 className={styles.itemTitle}>{title}</h3>
+                    <p className={styles.itemDescription}>{content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </Card>

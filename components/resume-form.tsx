@@ -10,6 +10,7 @@ import type {
   Skill,
   Certificate,
   Achievement,
+  TemplateType,
 } from "@/types/resume"
 import { PersonalInfoForm } from "./resume-form/personal-info"
 import { WorkExperienceForm } from "./resume-form/work-experience"
@@ -18,6 +19,7 @@ import { SkillsForm } from "./resume-form/skills"
 import { CertificatesForm } from "./resume-form/certificates"
 import { AchievementsForm } from "./resume-form/achievements"
 import { JobDescriptionForm } from "./resume-form/job-description"
+import { TemplateSelector } from "./resume-form/template-selector"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Loader2, ChevronRight, ChevronLeft } from "lucide-react"
@@ -49,6 +51,7 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
       certificates: [],
       achievements: [],
       jobDescription: "",
+      template: "modern",
     },
   )
 
@@ -84,6 +87,10 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
     setFormData((prev) => ({ ...prev, jobDescription }))
   }
 
+  const updateTemplate = (template: TemplateType) => {
+    setFormData((prev) => ({ ...prev, template }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -113,6 +120,14 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
   return (
     <div className="relative">
       <form onSubmit={handleSubmit}>
+        {/* Template Selection */}
+        <div className="mb-8">
+          <TemplateSelector
+            selectedTemplate={formData.template || "modern"}
+            onTemplateChange={updateTemplate}
+          />
+        </div>
+
         {/* Sticky Tab Navigation */}
         <div className="sticky top-0 z-20 bg-background pb-2">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">

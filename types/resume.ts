@@ -3,14 +3,14 @@ export interface PersonalInfo {
   email: string
   phone: string
   location: string
-  linkedIn?: string
-  portfolio?: string
+  linkedIn: string
+  portfolio: string
 }
 
 export interface WorkExperience {
   id: string
-  company: string
   position: string
+  company: string
   startDate: string
   endDate: string
   current: boolean
@@ -19,18 +19,16 @@ export interface WorkExperience {
 
 export interface Education {
   id: string
-  institution: string
   degree: string
   field: string
+  institution: string
   startDate: string
   endDate: string
+  current: boolean
   description?: string
 }
 
-export interface Skill {
-  id: string
-  name: string
-}
+export type Skill = string
 
 export interface Certificate {
   id: string
@@ -44,9 +42,11 @@ export interface Certificate {
 export interface Achievement {
   id: string
   title: string
-  date?: string
   description: string
+  date?: string
 }
+
+export type TemplateType = "modern" | "minimal"
 
 export interface ResumeData {
   personalInfo: PersonalInfo
@@ -56,15 +56,10 @@ export interface ResumeData {
   certificates: Certificate[]
   achievements: Achievement[]
   jobDescription: string
+  template: TemplateType
 }
 
-export interface GeneratedResume {
-  personalInfo: PersonalInfo
-  summary: string
-  workExperience: WorkExperience[]
-  education: Education[]
-  skills: string[]
-  certificates: Certificate[]
-  achievements: Achievement[]
+export interface GeneratedResume extends ResumeData {
+  summary?: string
   additionalSections?: Record<string, string>
 }

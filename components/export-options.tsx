@@ -2,28 +2,32 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Download, FileText, FileType, FileIcon as FilePdf, ChevronDown } from "lucide-react"
+import { Download, FileText, FileType, FileIcon as FilePdf, ChevronDown, Printer } from "lucide-react"
 import { exportToDocx, exportToText } from "@/utils/export-utils"
 import { exportElementToPdf, printAsPdf } from "@/utils/pdf-export-utils"
 import type { GeneratedResume } from "@/types/resume"
+import { useToast } from "@/hooks/use-toast"
 
 interface ExportOptionsProps {
   resume: GeneratedResume
-  resumeRef: React.RefObject<HTMLDivElement>
+  resumeRef: React.RefObject<HTMLDivElement | null>
 }
 
 export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
+  const { toast } = useToast()
   const [isExporting, setIsExporting] = useState(false)
   const [exportFormat, setExportFormat] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [showDialog, setShowDialog] = useState(false)
   const filename = resume.personalInfo.fullName.replace(/\s+/g, "_") + "_Resume"
+  const exportAttempts = useRef(0)
+  const [showFallback, setShowFallback] = useState(false)
 
   const handleExport = async (format: string) => {
     if (!resumeRef.current) {
@@ -79,15 +83,30 @@ export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
               title: "PDF Export Complete",
               description: "Your resume has been successfully exported as a PDF.",
             })
+
+            // Reset export attempts on success
+            exportAttempts.current = 0
+            setShowFallback(false)
           } catch (error) {
             console.error("PDF export error:", error)
-            toast({
-              title: "PDF Export Failed",
-              description: "Using fallback print method instead.",
-            })
-            // Fallback to print method
-            if (resumeRef.current) {
-              printAsPdf(resumeRef.current)
+
+            // Increment attempt counter
+            exportAttempts.current += 1
+
+            // Show fallback option after first failure
+            if (exportAttempts.current >= 1) {
+              setShowFallback(true)
+              toast({
+                title: "PDF Export Failed",
+                description: "Please try the print method instead.",
+                variant: "destructive",
+              })
+            } else {
+              toast({
+                title: "PDF Export Failed",
+                description: "There was a problem exporting your resume. Please try again.",
+                variant: "destructive",
+              })
             }
           }
           break
@@ -154,16 +173,42 @@ export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
     }
   }
 
+  const handlePrint = async () => {
+    if (!resumeRef.current) {
+      toast({
+        title: "Print Failed",
+        description: "Could not find resume content to print.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      await printAsPdf(resumeRef.current)
+      toast({
+        title: "Print Complete",
+        description: "Your resume has been successfully printed.",
+      })
+    } catch (error) {
+      console.error("Print error:", error)
+      toast({
+        title: "Print Failed",
+        description: "There was a problem printing your resume. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        {/* <DropdownMenuTrigger asChild>
           <Button className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export Resume
             <ChevronDown className="h-4 w-4" />
           </Button>
-        </DropdownMenuTrigger>
+        </DropdownMenuTrigger> */}
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => handleExport("pdf")} className="flex items-center gap-2">
             <FilePdf className="h-4 w-4" />
@@ -198,6 +243,15 @@ export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {showFallback && (
+        <div className="flex gap-2 mt-4">
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <Printer className="h-4 w-4" />
+            Print as PDF
+          </Button>
+        </div>
+      )}
     </>
   )
 }
