@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Linkedin, Globe, Award, BadgeIcon as Certificate } from "lucide-react"
 import { ExportOptions } from "@/components/export-options"
 import { ExportDiagnostics } from "@/components/export-diagnostics"
+import { PdfExportButton } from "@/components/pdf-export-button"
 
 interface ResumePreviewProps {
   resume: GeneratedResume
@@ -33,7 +34,13 @@ export function ResumePreview({ resume, onBack }: ResumePreviewProps) {
         <Button variant="outline" onClick={onBack}>
           Back to Form
         </Button>
-        <ExportOptions resume={resume} resumeRef={resumeRef} />
+        <div className="flex gap-2">
+          <PdfExportButton
+            resumeRef={resumeRef}
+            filename={`${resume.personalInfo.fullName.replace(/\s+/g, "_")}_Resume`}
+          />
+          <ExportOptions resume={resume} resumeRef={resumeRef} />
+        </div>
       </div>
 
       <Card className="p-8 bg-white shadow-md">

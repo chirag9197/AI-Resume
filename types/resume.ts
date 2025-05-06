@@ -13,6 +13,7 @@ export interface WorkExperience {
   position: string
   startDate: string
   endDate: string
+  current: boolean
   description: string
 }
 

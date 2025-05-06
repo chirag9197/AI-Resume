@@ -1,82 +1,30 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, Loader2 } from "lucide-react"
-import { exportToPdf } from "@/utils/pdf-export"
-import { toast } from "@/components/ui/use-toast"
 import { Progress } from "@/components/ui/progress"
+import { toast } from "@/components/ui/use-toast"
+import { Download, Printer } from "lucide-react"
+import { exportElementToPdf, printAsPdf } from "@/utils/pdf-export-utils"
 
 interface PdfExportButtonProps {
   resumeRef: React.RefObject<HTMLDivElement>
-  filename: string
+  filename?: string
 }
 
-export function PdfExportButton({ resumeRef, filename }: PdfExportButtonProps) {
+export function PdfExportButton({ resumeRef, filename = "resume" }: PdfExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [isLibraryLoaded, setIsLibraryLoaded] = useState(false)
-
-  // Load the html2pdf library dynamically
-  useEffect(() => {
-    const loadHtml2PdfLibrary = async () => {
-      try {
-        // Check if the library is already loaded
-        if (typeof window !== "undefined" && window.html2pdf) {
-          setIsLibraryLoaded(true)
-          return
-        }
-
-        // Load the library dynamically
-        const script = document.createElement("script")
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-        script.async = true
-
-        script.onload = () => {
-          console.log("html2pdf library loaded successfully")
-          setIsLibraryLoaded(true)
-        }
-
-        script.onerror = () => {
-          console.error("Failed to load html2pdf library")
-          toast({
-            title: "PDF Export Setup Failed",
-            description: "Could not load the PDF export library. Please try again later.",
-            variant: "destructive",
-          })
-        }
-
-        document.body.appendChild(script)
-
-        return () => {
-          // Clean up
-          if (document.body.contains(script)) {
-            document.body.removeChild(script)
-          }
-        }
-      } catch (error) {
-        console.error("Error loading PDF library:", error)
-      }
-    }
-
-    loadHtml2PdfLibrary()
-  }, [])
+  const [showFallback, setShowFallback] = useState(false)
+  const exportAttempts = useRef(0)
 
   const handleExport = async () => {
     if (!resumeRef.current) {
       toast({
         title: "Export Failed",
-        description: "Could not find the resume content to export.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!isLibraryLoaded) {
-      toast({
-        title: "PDF Export Not Ready",
-        description: "The PDF export library is still loading. Please try again in a moment.",
+        description: "Could not find resume content to export.",
         variant: "destructive",
       })
       return
@@ -86,63 +34,73 @@ export function PdfExportButton({ resumeRef, filename }: PdfExportButtonProps) {
     setProgress(0)
 
     try {
-      await exportToPdf(resumeRef.current, {
-        filename: `${filename}.pdf`,
-        onProgress: (value) => setProgress(value),
-        onComplete: () => {
-          toast({
-            title: "PDF Export Complete",
-            description: "Your resume has been successfully exported as a PDF.",
-          })
-          setIsExporting(false)
-        },
-        onError: (error) => {
-          console.error("PDF export error:", error)
-          toast({
-            title: "Export Failed",
-            description: "There was a problem exporting your resume. Please try again.",
-            variant: "destructive",
-          })
-          setIsExporting(false)
-        },
+      // Clone the element to avoid modifying the original
+      const element = resumeRef.current.cloneNode(true) as HTMLElement
+
+      // Add any necessary styles for PDF export
+      element.style.width = "100%"
+      element.style.maxWidth = "8.5in"
+      element.style.margin = "0 auto"
+      element.style.padding = "0.5in"
+      element.style.backgroundColor = "white"
+
+      // Export to PDF
+      await exportElementToPdf(element, `${filename}.pdf`, (value) => setProgress(value))
+
+      toast({
+        title: "PDF Export Complete",
+        description: "Your resume has been successfully exported as a PDF.",
       })
+
+      // Reset export attempts on success
+      exportAttempts.current = 0
+      setShowFallback(false)
     } catch (error) {
       console.error("PDF export error:", error)
-      toast({
-        title: "Export Failed",
-        description: "There was a problem exporting your resume. Please try again.",
-        variant: "destructive",
-      })
+
+      // Increment attempt counter
+      exportAttempts.current += 1
+
+      // Show fallback option after first failure
+      if (exportAttempts.current >= 1) {
+        setShowFallback(true)
+        toast({
+          title: "PDF Export Failed",
+          description: "Please try the print method instead.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "PDF Export Failed",
+          description: "There was a problem exporting your resume. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } finally {
       setIsExporting(false)
     }
   }
 
+  const handlePrintFallback = () => {
+    if (!resumeRef.current) return
+    printAsPdf(resumeRef.current)
+  }
+
   return (
     <div className="space-y-2">
-      <Button
-        onClick={handleExport}
-        disabled={isExporting || !isLibraryLoaded}
-        className="flex items-center gap-2 w-full"
-      >
-        {isExporting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Exporting PDF...
-          </>
-        ) : !isLibraryLoaded ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Preparing...
-          </>
-        ) : (
-          <>
-            <Download className="h-4 w-4" />
-            Download as PDF
-          </>
-        )}
+      <Button onClick={handleExport} disabled={isExporting} className="flex items-center gap-2 w-full">
+        <Download className="h-4 w-4" />
+        {isExporting ? "Exporting PDF..." : "Download as PDF"}
       </Button>
 
       {isExporting && <Progress value={progress} className="h-2" />}
+
+      {showFallback && (
+        <Button variant="outline" onClick={handlePrintFallback} className="flex items-center gap-2 w-full mt-2">
+          <Printer className="h-4 w-4" />
+          Print as PDF (Alternative)
+        </Button>
+      )}
     </div>
   )
 }

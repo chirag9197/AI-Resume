@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import type {
   ResumeData,
@@ -21,8 +20,11 @@ import { AchievementsForm } from "./resume-form/achievements"
 import { JobDescriptionForm } from "./resume-form/job-description"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, ChevronRight, ChevronLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Progress } from "@/components/ui/progress"
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 
 interface ResumeFormProps {
   onSubmit: (data: ResumeData) => Promise<void>
@@ -49,6 +51,10 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
       jobDescription: "",
     },
   )
+
+  const [activeTab, setActiveTab] = useState("personal")
+  const [progress, setProgress] = useState(0)
+  const [openSection, setOpenSection] = useState<string>(activeTab)
 
   const updatePersonalInfo = (personalInfo: PersonalInfo) => {
     setFormData((prev) => ({ ...prev, personalInfo }))
@@ -80,10 +86,6 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Log form data for debugging
-    console.log("Submitting form data:", formData)
-
     try {
       await onSubmit(formData)
     } catch (error) {
@@ -91,149 +93,142 @@ export function ResumeForm({ onSubmit, isLoading, initialData }: ResumeFormProps
     }
   }
 
-  const isFormValid = () => {
-    const { personalInfo, workExperience, education, skills, jobDescription } = formData
+  const tabs = [
+    "personal",
+    "experience",
+    "education",
+    "skills",
+    "certificates",
+    "achievements",
+    "job",
+  ]
 
-    // Check personal info
-    const personalInfoValid = personalInfo.fullName && personalInfo.email && personalInfo.phone && personalInfo.location
-
-    // Check work experience
-    let workExperienceValid = workExperience.length > 0
-
-    if (workExperienceValid) {
-      for (const exp of workExperience) {
-        if (!exp.company || !exp.position || !exp.startDate || (!exp.endDate && !exp.current) || !exp.description) {
-          workExperienceValid = false
-          break
-        }
-      }
-    }
-
-    // Check education
-    let educationValid = education.length > 0
-
-    if (educationValid) {
-      for (const edu of education) {
-        if (!edu.institution || !edu.degree || !edu.field || !edu.startDate || (!edu.endDate && !edu.current)) {
-          educationValid = false
-          break
-        }
-      }
-    }
-
-    // Check skills
-    const skillsValid = skills.length > 0
-
-    // Check job description
-    const jobDescriptionValid = jobDescription.trim() !== ""
-
-    // Log validation results for debugging
-    console.log("Form validation results:", {
-      personalInfoValid,
-      workExperienceValid,
-      educationValid,
-      skillsValid,
-      jobDescriptionValid,
-    })
-
-    return personalInfoValid && workExperienceValid && educationValid && skillsValid && jobDescriptionValid
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    setOpenSection(value)
+    const currentIndex = tabs.findIndex((tab) => tab === value)
+    setProgress(((currentIndex + 1) / tabs.length) * 100)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
-          <TabsTrigger value="personal">Personal</TabsTrigger>
-          <TabsTrigger value="experience">Experience</TabsTrigger>
-          <TabsTrigger value="education">Education</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
-          <TabsTrigger value="job">Job Description</TabsTrigger>
-        </TabsList>
+    <div className="relative">
+      <form onSubmit={handleSubmit}>
+        {/* Sticky Tab Navigation */}
+        <div className="sticky top-0 z-20 bg-background pb-2">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-7 gap-2">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
-        <TabsContent value="personal">
-          <Card>
-            <CardContent className="pt-6">
-              <PersonalInfoForm value={formData.personalInfo} onChange={updatePersonalInfo} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Accordion for Sections */}
+        <Accordion type="single" collapsible value={openSection} onValueChange={setOpenSection} className="space-y-4">
+          {tabs.map((tab, idx) => (
+            <AccordionItem value={tab} key={tab}>
+              <AccordionTrigger className="text-lg font-semibold">
+                {tab}
+              </AccordionTrigger>
+              <AccordionContent>
+                {/* Render the section form for this tab only if open */}
+                {openSection === tab && (
+                  <div className="py-2">
+                    {tab === "personal" && (
+                      <PersonalInfoForm
+                        value={formData.personalInfo}
+                        onChange={updatePersonalInfo}
+                      />
+                    )}
+                    {tab === "experience" && (
+                      <WorkExperienceForm
+                        value={formData.workExperience}
+                        onChange={updateWorkExperience}
+                      />
+                    )}
+                    {tab === "education" && (
+                      <EducationForm
+                        value={formData.education}
+                        onChange={updateEducation}
+                      />
+                    )}
+                    {tab === "skills" && (
+                      <SkillsForm value={formData.skills} onChange={updateSkills} />
+                    )}
+                    {tab === "certificates" && (
+                      <CertificatesForm
+                        value={formData.certificates}
+                        onChange={updateCertificates}
+                      />
+                    )}
+                    {tab === "achievements" && (
+                      <AchievementsForm
+                        value={formData.achievements}
+                        onChange={updateAchievements}
+                      />
+                    )}
+                    {tab === "job" && (
+                      <JobDescriptionForm
+                        value={formData.jobDescription}
+                        onChange={updateJobDescription}
+                      />
+                    )}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
 
-        <TabsContent value="experience">
-          <Card>
-            <CardContent className="pt-6">
-              <WorkExperienceForm value={formData.workExperience} onChange={updateWorkExperience} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="education">
-          <Card>
-            <CardContent className="pt-6">
-              <EducationForm value={formData.education} onChange={updateEducation} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="skills">
-          <Card>
-            <CardContent className="pt-6">
-              <SkillsForm value={formData.skills} onChange={updateSkills} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="certificates">
-          <Card>
-            <CardContent className="pt-6">
-              <CertificatesForm value={formData.certificates} onChange={updateCertificates} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="achievements">
-          <Card>
-            <CardContent className="pt-6">
-              <AchievementsForm value={formData.achievements} onChange={updateAchievements} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="job">
-          <Card>
-            <CardContent className="pt-6">
-              <JobDescriptionForm value={formData.jobDescription} onChange={updateJobDescription} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={isLoading || !isFormValid()}
-          className="min-w-[150px]"
-          onClick={(e) => {
-            if (!isFormValid()) {
-              e.preventDefault()
-              console.log("Form validation failed, button clicked but submission prevented")
-              return
-            }
-            console.log("Submit button clicked, form is valid")
-          }}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            "Generate Resume"
-          )}
-        </Button>
-      </div>
-    </form>
+        {/* Sticky Action Buttons */}
+        <div className="sticky bottom-0 z-20 bg-background pt-4 pb-2 flex justify-between gap-2 border-t mt-8">
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              const currentIndex = tabs.findIndex((tab) => tab === activeTab)
+              if (currentIndex > 0) {
+                handleTabChange(tabs[currentIndex - 1])
+              }
+            }}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              const currentIndex = tabs.findIndex((tab) => tab === activeTab)
+              if (currentIndex < tabs.length - 1) {
+                handleTabChange(tabs[currentIndex + 1])
+              }
+            }}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button type="submit" disabled={isLoading} className="min-w-[120px]">
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate Resume"
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }

@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
 import { Download, FileText, FileType, FileIcon as FilePdf, ChevronDown } from "lucide-react"
-import { exportToPdf, printToPdf, exportToDocx, exportToText } from "@/utils/export-utils"
+import { exportToDocx, exportToText } from "@/utils/export-utils"
+import { exportElementToPdf, printAsPdf } from "@/utils/pdf-export-utils"
 import type { GeneratedResume } from "@/types/resume"
 
 interface ExportOptionsProps {
@@ -52,7 +53,27 @@ export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
         case "pdf":
           try {
             console.log("Starting PDF export process")
-            await exportToPdf(resumeRef.current, filename)
+            setProgress(10)
+
+            if (!resumeRef.current) {
+              throw new Error("Resume element not found")
+            }
+
+            // Clone the element to avoid modifying the original
+            const element = resumeRef.current.cloneNode(true) as HTMLElement
+
+            // Add any necessary styles for PDF export
+            element.style.width = "100%"
+            element.style.maxWidth = "8.5in"
+            element.style.margin = "0 auto"
+            element.style.padding = "0.5in"
+            element.style.backgroundColor = "white"
+
+            setProgress(30)
+
+            // Export to PDF
+            await exportElementToPdf(element, filename, (value) => setProgress(value > 30 ? value : 30))
+
             console.log("PDF export completed successfully")
             toast({
               title: "PDF Export Complete",
@@ -65,7 +86,9 @@ export function ExportOptions({ resume, resumeRef }: ExportOptionsProps) {
               description: "Using fallback print method instead.",
             })
             // Fallback to print method
-            printToPdf(resumeRef.current, filename)
+            if (resumeRef.current) {
+              printAsPdf(resumeRef.current)
+            }
           }
           break
 

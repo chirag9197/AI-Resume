@@ -24,7 +24,6 @@ export function EducationForm({ value, onChange }: EducationFormProps) {
       field: "",
       startDate: "",
       endDate: "",
-      description: "",
     }
     onChange([...value, newEducation])
   }
@@ -146,17 +145,6 @@ export function EducationForm({ value, onChange }: EducationFormProps) {
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`description-${index}`}>Description (Optional)</Label>
-            <Textarea
-              id={`description-${index}`}
-              value={education.description || ""}
-              onChange={(e) => updateEducation(index, "description", e.target.value)}
-              placeholder="Relevant coursework, achievements, etc."
-              rows={3}
-            />
           </div>
         </div>
       ))}

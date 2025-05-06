@@ -19,7 +19,6 @@ export function CertificatesForm({ value, onChange }: CertificatesFormProps) {
       issuer: "",
       date: "",
       url: "",
-      description: "",
     }
     onChange([...value, newCertificate])
   }
@@ -114,16 +113,6 @@ export function CertificatesForm({ value, onChange }: CertificatesFormProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor={`certificate-description-${index}`}>Description (Optional)</Label>
-            <Textarea
-              id={`certificate-description-${index}`}
-              value={certificate.description || ""}
-              onChange={(e) => updateCertificate(index, "description", e.target.value)}
-              placeholder="Brief description of the certification and skills demonstrated"
-              rows={2}
-            />
-          </div>
         </div>
       ))}
     </div>

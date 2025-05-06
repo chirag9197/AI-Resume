@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Trash2 } from "lucide-react"
+import { PlusCircle, Trash2, Sparkles } from "lucide-react"
+import { AIGeneratorButton } from "./ai-generator-button"
+import { generateAchievement } from "@/app/actions"
 
 interface AchievementsFormProps {
   value: Achievement[]
@@ -93,7 +95,16 @@ export function AchievementsForm({ value, onChange }: AchievementsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor={`achievement-description-${index}`}>Description</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label htmlFor={`achievement-description-${index}`}>Description</Label>
+              <AIGeneratorButton
+                onGenerate={async (prompt) => await generateAchievement(prompt)}
+                onContentGenerated={(content) => updateAchievement(index, "description", content)}
+                placeholder="Describe your achievement and its impact..."
+                label={<span className="flex items-center gap-1"><Sparkles className="h-4 w-4 text-primary" /> Generate with AI</span>}
+                initialPrompt={achievement.description}
+              />
+            </div>
             <Textarea
               id={`achievement-description-${index}`}
               value={achievement.description}
